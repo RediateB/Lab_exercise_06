@@ -4,10 +4,14 @@ const form = document.querySelector("#task-form"); //The form at the top
 const filter = document.querySelector("#filter"); //the task filter text field
 const taskList = document.querySelector(".collection"); //The UL
 const clearBtn = document.querySelector(".clear-tasks"); //the all task clear button
-
+const ascend = document.querySelector('#ascend')
+const descend = document.querySelector('#descend')
 const reloadIcon = document.querySelector(".fa"); //the reload button at the top navigation
 
 //DB variable
+ascend.addEventListener("click", ascending);
+
+descend.addEventListener("click", descending);
 
 let DB;
 
@@ -45,9 +49,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // createindex: 1) field name 2) keypath 3) options
     objectStore.createIndex("taskname", "taskname", { unique: false });
-
+    let newTask={
+      taskname:taskInput.value,
+      created:new Date(),
+    };
     console.log("Database ready and fields created!");
   };
+
 
   form.addEventListener("submit", addNewTask);
 
@@ -160,3 +168,82 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Tasks Cleared !!!");
   }
 });
+
+//Ascending
+  function ascending(e) {
+    let fetchedTasks = []; // an empty array to fetch and store tasks from the database.
+
+    let tasks = DB.transaction("tasks", "readwrite").objectStore(
+      "tasks"
+    );
+
+    let allTasks = tasks.getAll(); //get all tasks
+
+    //if getting all tasks is successful, do this
+    allTasks.onsuccess = (e) => {
+      fetchedTasks = allTasks.result; //store the fetched tasks in the array created above
+
+      //remove current elements
+      while (taskList.firstChild) {
+        const e = taskList.firstChild;
+        e.parentElement.removeChild(e);
+      }
+
+      fetchedTasks.reverse(); //reverse the array of objects we stored
+
+      //iterate through the array of tasks and recreate the list elements with the tasks data.
+      for (let index = 0; index < fetchedTasks.length; index++) {
+        const li = document.createElement("li");
+        li.setAttribute("data-task-id", fetchedTasks[index].id);
+        li.className = "collection-item";
+        li.appendChild(document.createTextNode(fetchedTasks[index].taskname));
+        const link = document.createElement("a");
+        link.className = "delete-item secondary-content";
+        link.innerHTML = `
+                     <i class="fa fa-remove"></i>
+                    &nbsp;
+                    <a href="./edit.html?id=${fetchedTasks[index].id}"><i class="fa fa-edit"></i> </a>
+                    `;
+        li.appendChild(link);
+        taskList.appendChild(li);
+      }
+    };
+  }
+  //Descending
+
+  function descending(e) {
+    let fetchedTasks = []; // an empty array to fetch and store tasks from the database.
+    let tasks = DB.transaction("tasks", "readwrite").objectStore(
+      "tasks"
+    );
+
+    let allTasks = tasks.getAll(); //get all tasks
+
+    //if getting all tasks is successful, do this
+    allTasks.onsuccess = (e) => {
+      fetchedTasks = allTasks.result;
+
+      //remove current elements
+      while (taskList.firstChild) {
+        const e = taskList.firstChild;
+        e.parentElement.removeChild(e);
+      }
+
+      //Iterate through the array of tasks and recreate the list elements with the tasks data.
+      for (let index = 0; index < fetchedTasks.length; index++) {
+        const li = document.createElement("li");
+        li.setAttribute("data-task-id", fetchedTasks[index].id);
+        li.className = "collection-item";
+        li.appendChild(document.createTextNode(fetchedTasks[index].taskname));
+        const link = document.createElement("a");
+        link.className = "delete-item secondary-content";
+        link.innerHTML = `
+                     <i class="fa fa-remove"></i>
+                    &nbsp;
+                    <a href="./edit.html?id=${fetchedTasks[index].id}"><i class="fa fa-edit"></i> </a>
+                    `;
+        li.appendChild(link);
+        taskList.appendChild(li);
+      }
+    };
+  }
